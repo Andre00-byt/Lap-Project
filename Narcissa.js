@@ -129,9 +129,16 @@ class Snake extends Actor {
 	}
 	animation(x, y) {
 		this.handleKey();
+		let auxX = this.x;
+		let auxY = this.y;
 		this.move(this.movex, this.movey);
-		for(let i = 0; i < this.body.length ; i++){
-			this.body[i].changePosition();
+		
+		for(const element of this.body){
+			let oldx = element.x;
+			let oldy = element.y;
+			element.changePosition(auxX, auxY);
+			auxX = oldx;
+			auxY = oldy;
 		}
 	}
 
@@ -145,8 +152,10 @@ class SnakeBody extends Actor {
 		super(x,y, IMAGE_NAME_SNAKE_BODY);
 	}
 	changePosition(x,y){
+		this.hide();
 		this.x = x;
 		this.y = y;
+		this.show();
 	}
 }
 
