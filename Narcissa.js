@@ -64,6 +64,7 @@ class Actor {
 		this.show();
 	}
 	animation(x, y) {
+	;
 	}
 	checkPosition() {
 		if (this.x < 0)
@@ -90,8 +91,12 @@ class Empty extends Actor {
 		super(-1, -1, IMAGE_NAME_EMPTY);
 		this.atime = Number.MAX_SAFE_INTEGER;	// This has a very technical role
 	}
-	show() {}
-	hide() {}
+	show() {
+	;
+	}
+	hide() {
+	;
+	}
 }
 
 class Invalid extends Actor {
@@ -129,12 +134,34 @@ class Snake extends Actor {
 	}
 	animation(x, y) {
 		this.handleKey();
+
 		let auxX = this.x;
 		let auxY = this.y;
-		this.move(this.movex, this.movey);
 		
-		for(let i = 0; i < this.body.length; i++){
-			let currentSegment = this.body[i];
+		this.move(this.movex, this.movey);
+
+		for(const element of this.body){
+			let currentSegment = element;
+			if(currentSegment === undefined){
+				break;
+			}
+			if(currentSegment.x == this.x && currentSegment.y == this.y){
+				for(const element of this.body){
+					if(element === undefined){
+						break;
+					}
+					element.hide();
+				}
+				mesg("Game Over - tempo");
+				onLoad();
+				return;
+			}
+		}
+		for(const element of this.body){
+			let currentSegment = element;
+			if(currentSegment === undefined){
+				break;
+			}
 			let oldx = currentSegment.x;
 			let oldy = currentSegment.y;
 			currentSegment.changePosition(auxX, auxY);
