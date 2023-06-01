@@ -131,7 +131,7 @@ class Snake extends Actor {
 		this.handleKey();
 		this.move(this.movex, this.movey);
 		for(let i = 0; i < this.body.length ; i++){
-			this.body[i].changePosition()
+			this.body[i].changePosition();
 		}
 	}
 
