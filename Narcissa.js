@@ -111,7 +111,7 @@ class Snake extends Actor {
 		this.size = 5;
 		this.body = new Array(300);
 		for(let i = 1; i <= this.size; i++){
-			this.body[i] = new SnakeBody(x-i,y);
+			this.body[i - 1] = new SnakeBody(x-i,y);
 		}
 	}
 	handleKey() {
@@ -133,10 +133,11 @@ class Snake extends Actor {
 		let auxY = this.y;
 		this.move(this.movex, this.movey);
 		
-		for(const element of this.body){
-			let oldx = element.x;
-			let oldy = element.y;
-			element.changePosition(auxX, auxY);
+		for(let i = 0; i < this.body.length; i++){
+			let currentSegment = this.body[i];
+			let oldx = currentSegment.x;
+			let oldy = currentSegment.y;
+			currentSegment.changePosition(auxX, auxY);
 			auxX = oldx;
 			auxY = oldy;
 		}
