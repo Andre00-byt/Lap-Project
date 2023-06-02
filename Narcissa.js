@@ -35,11 +35,10 @@ const BERRY_COLORS = [
 	"berryGreen",
 ];
 
-const BERRY_FALL_TIME_MIN = 1000; // 1 second
-const BERRY_FALL_TIME_MAX = 11000; // 11 seconds
-const BERRY_SURVIVAL_TIME_MIN = 20000; // 20 seconds
-const BERRY_SURVIVAL_TIME_MAX = 100000; // 100 seconds
-const BERRY_WARNING_TIME = 10000; // 10 seconds
+const BERRY_FALL_TIME_MIN = ANIMATION_EVENTS_PER_SECOND;
+const BERRY_FALL_TIME_MAX = 11 * ANIMATION_EVENTS_PER_SECOND;
+const BERRY_SURVIVAL_TIME_MIN = 20 * ANIMATION_EVENTS_PER_SECOND;
+const BERRY_SURVIVAL_TIME_MAX = 100 * ANIMATION_EVENTS_PER_SECOND;
 
 // GLOBAL VARIABLES
 
@@ -73,7 +72,9 @@ class Actor {
 		this.y += dy;
 		this.show();
 	}
-	animation(x, y) { }
+	animation(x, y) {
+		;
+	}
 	checkPosition() {
 		if (this.x < 0) this.x = WORLD_WIDTH - 1;
 
@@ -112,9 +113,30 @@ class Berry extends Actor {
 		this.hide();
 		this.imageName = BERRY_COLORS[rand(6)];
 		this.show();
-		this.maxTime = rand(11);
+		this.time = BERRY_SURVIVAL_TIME_MIN +
+			rand(BERRY_SURVIVAL_TIME_MAX - BERRY_SURVIVAL_TIME_MIN);
 	}
-	animation(x, y) { }
+	animation(x, y) {
+		this.time--;
+		if (this.time === 10 * ANIMATION_EVENTS_PER_SECOND)
+			this.drawCircle()
+
+		if (this.time === 0)
+			this.hide();
+	}
+
+	drawCircle() {
+		control.ctx.beginPath();
+		control.ctx.arc(
+			x * ACTOR_PIXELS_X + ACTOR_PIXELS_X / 2,
+			y * ACTOR_PIXELS_Y + ACTOR_PIXELS_Y / 2,
+			2,
+			0,
+			2 * Math.PI
+		);
+		control.ctx.fillStyle = color;
+		control.ctx.fill();
+	}
 }
 
 class Snake extends Actor {
@@ -163,6 +185,7 @@ class Snake extends Actor {
 					}
 					element.hide();
 				}
+				control.clearALL();
 				mesg("Game Over - shrub");
 				this.hide();
 				onLoad();
@@ -184,6 +207,7 @@ class Snake extends Actor {
 					}
 					element.hide();
 				}
+				control.clearALL();
 				mesg("Game Over - tempo");
 				onLoad();
 				return;
@@ -230,6 +254,7 @@ class GameControl {
 		this.world = this.createWorld();
 		this.loadLevel(1);
 		this.setupEvents();
+		this.timeToAdd = rand(10 * ANIMATION_EVENTS_PER_SECOND) + 1 * ANIMATION_EVENTS_PER_SECOND;
 	}
 	getEmpty() {
 		return this.empty;
@@ -290,7 +315,7 @@ class GameControl {
 	}
 	animationEvent() {
 		this.time++;
-		for (let x = 0; x < WORLD_WIDTH; x++)
+		for (let x = 0; x < WORLD_WIDTH; x++) {
 			for (let y = 0; y < WORLD_HEIGHT; y++) {
 				let a = this.world[x][y];
 				if (a.atime < this.time) {
@@ -298,12 +323,38 @@ class GameControl {
 					a.animation(x, y);
 				}
 			}
-	}
+		}
 
+		this.timeToAdd--;
+		if (this.timeToAdd === 0) {
+			this.addBeries();
+		}
+
+	}
+	addBeries() {
+		let nBerriesToAdd = rand(4) + 1;
+		while (nBerriesToAdd > 0) {
+			let x = rand(WORLD_WIDTH);
+			let y = rand(WORLD_HEIGHT);
+			if (this.world[x][y] instanceof Empty) {
+				this.world[x][y] = new Berry(x, y, "berryBlue");
+				nBerriesToAdd--;
+			}
+		}
+		this.timeToAdd = rand(10 * ANIMATION_EVENTS_PER_SECOND) +
+			1 * ANIMATION_EVENTS_PER_SECOND;
+	}
 	keyDownEvent(e) {
 		this.key = e.keyCode;
 	}
 	keyUpEvent(e) { }
+
+	clearALL() {
+		for (let x = 0; x < WORLD_WIDTH; x++)
+			for (let y = 0; y < WORLD_HEIGHT; y++) {
+				this.world[x][y].hide();
+			}
+	}
 }
 
 // Functions called from the HTML page
