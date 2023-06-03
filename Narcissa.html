@@ -11,6 +11,26 @@
     <meta charset="UTF-8">
     <title>Linguagens e Ambientes de Programação (2022/2023) [Eng.Inf. - DI/FCT/UNL] - 3º projeto prático (Javascript)
     </title>
+    <style>
+        .game_details {
+            text-align: center;
+            width: 55.5%;
+        }
+
+        .scorebox {
+            display: inline-block;
+            padding: 1rem 1rem;
+            vertical-align: middle;
+            align-items: center;
+
+        }
+
+        .timeDisplay {
+            display: inline-block;
+            padding: 1rem 1rem;
+            vertical-align: middle;
+        }
+    </style>
 
     <SCRIPT TYPE="text/javascript" src="Narcissa0.js"></SCRIPT>
     <SCRIPT TYPE="text/javascript" src="Narcissa.js"></SCRIPT>
@@ -20,9 +40,12 @@
 <BODY onload="onLoad()">
     <p><b>Narcissa</b> -- André Soares (62349), António Salselas (62566)
     <p>
-    <div class="game details">
-        <div id="scorebox" align="center" style="font-size: 30px">
+    <div class="game_details">
+        <div id="scorebox" style="font-size: 30px">
             <span class="score">Score: 5 </span>
+        </div>
+        <div id="timeDisplay" style="font-size: 30px">
+            <span class="time">00:00:000 </span>
         </div>
     </div>
     </p>
@@ -32,9 +55,9 @@
         </CANVAS>
         <p>
             <INPUT TYPE="button" style="font-size: 20px; height: 30px; width: 100px" NAME="Start" VALUE="Start" SIZE=10
-                OnClick="b2()">
+                OnClick="startFun()">
             <INPUT TYPE="button" style="font-size: 20px; height: 30px; width: 100px" NAME="Pause" VALUE="Pause" SIZE=10
-                OnClick="b1()">
+                OnClick="pauseFun()">
             <INPUT TYPE="button" style="font-size: 20px; height: 30px; width: 100px" NAME="Reset" VALUE="Reset" SIZE=10
                 OnClick="window.location.reload()">
         <p>

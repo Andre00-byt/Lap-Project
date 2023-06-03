@@ -42,8 +42,10 @@ const BERRY_SURVIVAL_TIME_MAX = 100 * ANIMATION_EVENTS_PER_SECOND;
 
 // GLOBAL VARIABLES
 
-let control;
-let pause = false; // Try not no define more global variables
+let control;// Try not no define more global variables
+let start = false;
+let pause = false;
+let startTime = 0;
 
 // ACTORS
 
@@ -143,8 +145,8 @@ class Empty extends Actor {
 		super(-1, -1, IMAGE_NAME_EMPTY);
 		this.atime = Number.MAX_SAFE_INTEGER; // This has a very technical role
 	}
-	show() { }
-	hide() { }
+	show() { ; }
+	hide() { ; }
 }
 
 class Invalid extends Actor {
@@ -205,10 +207,8 @@ class Snake extends Actor {
 	}
 	handleKey() {
 		let k = control.getKey();
-		if (k === null);
+		if (k === null); // ignore
 		else if (typeof k === "string")
-			// ignore
-			// special command
 			// special command
 			mesg("special command == " + k);
 		else {
@@ -251,17 +251,25 @@ class Snake extends Actor {
 				for (let i = 0; i < this.lastColors.length; i++) {
 					if (this.lastColors[i] === element.imageName) {
 						this.size = div(this.size, 2);
-						if (this.size < 5)
+						if (this.size < 5) {
 							this.size = 5;
+						}
+						for (let j = this.size - 1; j < this.body.length; j++) {
+							let aux = this.body.pop();
+							aux.hide();
+						}
 						boolAux = false;
 						break;
 					}
 				}
 				if (element.almostDying && boolAux) {
 					this.size += 2;
+					this.body.push(new SnakeBody(-1, -1, IMAGE_NAME_SNAKE_BODY));
+					this.body.push(new SnakeBody(-1, -1, IMAGE_NAME_SNAKE_BODY));
 				}
 				else if (boolAux) {
 					this.size++;
+					this.body.push(new SnakeBody(-1, -1, IMAGE_NAME_SNAKE_BODY));
 				}
 
 				for (let i = 2; i > 0; i--) {
@@ -271,6 +279,7 @@ class Snake extends Actor {
 
 				this.changeBody(element);
 			}
+
 		}
 
 		this.move(this.movex, this.movey);
@@ -289,7 +298,7 @@ class Snake extends Actor {
 				}
 				control.clearALL();
 				this.size = 5;
-				mesg("Game Over - tempo");
+				mesg("Game Over - Body");
 				pause = false;
 				onLoad();
 				return;
@@ -308,6 +317,13 @@ class Snake extends Actor {
 			auxY = oldy;
 		}
 
+		if (this.size >= 300) {
+			control.clearALL();
+			mesg("Victory Royale");
+			this.size = 5;
+			pause = false;
+			onLoad();
+		}
 	}
 
 	changeBody(element) {
@@ -317,7 +333,6 @@ class Snake extends Actor {
 
 		this.body[0].imageName = element.imageName;
 	}
-
 }
 
 class SnakeBody extends Actor {
@@ -336,7 +351,6 @@ class SnakeBody extends Actor {
 
 class GameControl {
 	constructor() {
-		let c = document.getElementById("canvas1");
 		control = this; // setup global var
 		this.key = 0;
 		this.time = 0;
@@ -347,6 +361,9 @@ class GameControl {
 		this.setupEvents();
 		this.timeToAdd = rand(10 * ANIMATION_EVENTS_PER_SECOND) + 1 * ANIMATION_EVENTS_PER_SECOND;
 		this.score = 0;
+		this.mins = 0;
+		this.seconds = 0;
+		this.milliSeconds = 0;
 	}
 	getEmpty() {
 		return this.empty;
@@ -408,6 +425,8 @@ class GameControl {
 	animationEvent() {
 		if (pause) {
 			this.time++;
+			this.updateClock();
+			timeDisplay.innerHTML = this.mins + ":" + this.seconds + ":" + this.milliSeconds;
 			for (let x = 0; x < WORLD_WIDTH; x++) {
 				for (let y = 0; y < WORLD_HEIGHT; y++) {
 					let a = this.world[x][y];
@@ -445,13 +464,29 @@ class GameControl {
 	keyDownEvent(e) {
 		this.key = e.keyCode;
 	}
-	keyUpEvent(e) { }
+	keyUpEvent(e) {
+		;
+	}
 
 	clearALL() {
 		for (let x = 0; x < WORLD_WIDTH; x++)
 			for (let y = 0; y < WORLD_HEIGHT; y++) {
 				this.world[x][y].hide();
 			}
+	}
+
+	updateClock() {
+		this.milliSeconds += 250;
+
+		if (this.milliSeconds >= 1000) {
+			this.seconds++;
+			this.milliSeconds = 0;
+		}
+
+		if (this.seconds >= 60) {
+			this.mins++;
+			this.seconds = 0;
+		}
 	}
 }
 
@@ -462,9 +497,13 @@ function onLoad() {
 	GameImages.loadAll(() => new GameControl());
 }
 
-function b1() {
-	pause = false;
+function pauseFun() {
+	pause = !pause;
 }
-function b2() {
-	pause = true;
+function startFun() {
+	if (!start) {
+		pause = true;
+		start = true;
+		startTime = Date.now();
+	}
 }
