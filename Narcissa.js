@@ -110,27 +110,34 @@ class Invalid extends Actor {
 class Berry extends Actor {
 	constructor(x, y, color) {
 		super(x, y, color);
+		this.almostDying = false;
 		this.hide();
-		this.imageName = BERRY_COLORS[rand(6)];
+
+		if (color === IMAGE_NAME_EMPTY)
+			this.imageName = BERRY_COLORS[rand(6)];
+
 		this.show();
 		this.time = BERRY_SURVIVAL_TIME_MIN +
 			rand(BERRY_SURVIVAL_TIME_MAX - BERRY_SURVIVAL_TIME_MIN);
 	}
 	animation(x, y) {
 		this.time--;
-		if (this.time === 10 * ANIMATION_EVENTS_PER_SECOND)
-			this.drawCircle()
+		if (this.time === 10 * ANIMATION_EVENTS_PER_SECOND) {
+			this.drawCircle(this.x, this.y, "white")
+			this.almostDying = true;
+		}
 
-		if (this.time === 0)
+		if (this.time === 0) {
 			this.hide();
+		}
 	}
 
-	drawCircle() {
+	drawCircle(x, y, color) {
 		control.ctx.beginPath();
 		control.ctx.arc(
 			x * ACTOR_PIXELS_X + ACTOR_PIXELS_X / 2,
 			y * ACTOR_PIXELS_Y + ACTOR_PIXELS_Y / 2,
-			2,
+			4,
 			0,
 			2 * Math.PI
 		);
@@ -143,11 +150,12 @@ class Snake extends Actor {
 	constructor(x, y) {
 		super(x, y, IMAGE_NAME_SNAKE_HEAD);
 		[this.movex, this.movey] = [1, 0];
-		this.size = 6;
+		this.size = 5;
 		this.body = new Array(this.size - 1);
 		for (let i = 1; i <= this.size - 1; i++) {
 			this.body[i - 1] = new SnakeBody(x - i, y);
 		}
+		this.lastColors = new Array(3);
 	}
 	handleKey() {
 		let k = control.getKey();
@@ -176,9 +184,8 @@ class Snake extends Actor {
 			this.x + this.movex > 0 &&
 			this.y + this.movey > 0
 		) {
-			if (
-				control.world[this.x + this.movex][this.y + this.movey] instanceof Shrub
-			) {
+			let element = control.world[this.x + this.movex][this.y + this.movey];
+			if (element instanceof Shrub) {
 				for (const element of this.body) {
 					if (element === undefined) {
 						break;
@@ -190,6 +197,25 @@ class Snake extends Actor {
 				this.hide();
 				onLoad();
 				return;
+			}
+			else if (element instanceof Berry) {
+				let boolAux = true;
+				for (let i = 0; i < lastColor.length; i++) {
+					if (lastColor === element.color) {
+						this.size = div(size, 2);
+						boolAux = false;
+					}
+				}
+				if (element.almostDying && boolAux) {
+					this.size += 2;
+				}
+				else if (boolAux) {
+					this.size++;
+				}
+				for (let i = 2; i > 0; i--) {
+					this.lastColors[i] = this.lastColors[i - 1];
+				}
+				this.lastColors[0] = element.color;
 			}
 		}
 
@@ -225,8 +251,6 @@ class Snake extends Actor {
 			auxY = oldy;
 		}
 	}
-
-	addBody(x, y) { }
 }
 
 class SnakeBody extends Actor {
@@ -337,7 +361,7 @@ class GameControl {
 			let x = rand(WORLD_WIDTH);
 			let y = rand(WORLD_HEIGHT);
 			if (this.world[x][y] instanceof Empty) {
-				this.world[x][y] = new Berry(x, y, "berryBlue");
+				this.world[x][y] = new Berry(x, y, "empty");
 				nBerriesToAdd--;
 			}
 		}
