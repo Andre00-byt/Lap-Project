@@ -106,7 +106,8 @@ class Shrub extends Actor {
 				while (boolAux && i < 9) {
 					let auxX = this.x - 1 + rand(2);
 					let auxY = this.y - 1 + rand(2);
-					if (auxX < WORLD_WIDTH && auxX > -1 && auxY < WORLD_HEIGHT && auxY > -1 && control.world[auxX][auxY] instanceof Empty) {
+					if (auxX < WORLD_WIDTH && auxX > -1 && auxY < WORLD_HEIGHT &&
+						auxY > -1 && control.world[auxX][auxY] instanceof Empty) {
 						boolAux = false;
 						this.coords.push(new ShrubChild(auxX, auxY, IMAGE_NAME_SHRUB));
 					}
@@ -119,7 +120,8 @@ class Shrub extends Actor {
 					while (boolAux && i < 9) {
 						let auxX = chosenOne.x - 1 + rand(2);
 						let auxY = chosenOne.y - 1 + rand(2);
-						if (auxX < WORLD_WIDTH && auxX > -1 && auxY < WORLD_HEIGHT && auxY > -1 && control.world[auxX][auxY] instanceof Empty) {
+						if (auxX < WORLD_WIDTH && auxX > -1 && auxY < WORLD_HEIGHT &&
+							auxY > -1 && control.world[auxX][auxY] instanceof Empty) {
 							boolAux = false;
 							this.coords.push(new ShrubChild(auxX, auxY, IMAGE_NAME_SHRUB));
 							break;
@@ -241,9 +243,14 @@ class Snake extends Actor {
 				control.clearALL();
 				this.size = 5;
 				mesg("Game Over - shrub");
+				start = false;
 				pause = false;
 				this.hide();
 				onLoad();
+				control.mins = 0;
+				control.seconds = 0;
+				control.milliSeconds = 0;
+				timeDisplay.innerHTML = "00:00:000";
 				return;
 			}
 			else if (element instanceof Berry) {
@@ -299,8 +306,13 @@ class Snake extends Actor {
 				control.clearALL();
 				this.size = 5;
 				mesg("Game Over - Body");
+				start = false;
 				pause = false;
 				onLoad();
+				control.mins = 0;
+				control.seconds = 0;
+				control.milliSeconds = 0;
+				timeDisplay.innerHTML = "00:00:000";
 				return;
 			}
 		}
@@ -322,7 +334,12 @@ class Snake extends Actor {
 			mesg("Victory Royale");
 			this.size = 5;
 			pause = false;
+			start = false;
 			onLoad();
+			control.mins = 0;
+			control.seconds = 0;
+			control.milliSeconds = 0;
+			timeDisplay.innerHTML = "00:00:000";
 		}
 	}
 
@@ -359,7 +376,8 @@ class GameControl {
 		this.world = this.createWorld();
 		this.loadLevel(1);
 		this.setupEvents();
-		this.timeToAdd = rand(10 * ANIMATION_EVENTS_PER_SECOND) + 1 * ANIMATION_EVENTS_PER_SECOND;
+		this.timeToAdd = rand(10 * ANIMATION_EVENTS_PER_SECOND) +
+			1 * ANIMATION_EVENTS_PER_SECOND;
 		this.score = 0;
 		this.mins = 0;
 		this.seconds = 0;
