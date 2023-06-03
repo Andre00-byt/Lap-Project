@@ -42,7 +42,8 @@ const BERRY_SURVIVAL_TIME_MAX = 100 * ANIMATION_EVENTS_PER_SECOND;
 
 // GLOBAL VARIABLES
 
-let control; // Try not no define more global variables
+let control;
+let pause = false; // Try not no define more global variables
 
 // ACTORS
 
@@ -87,6 +88,51 @@ class Actor {
 }
 
 class Shrub extends Actor {
+
+	constructor(x, y, color) {
+		super(x, y, IMAGE_NAME_SHRUB);
+		this.time = (20 + rand(80)) * ANIMATION_EVENTS_PER_SECOND;
+		this.coords = new Array(0);
+	}
+
+	animation(x, y) {
+		this.time--;
+		let i = 0;
+		if (this.time === 0) {
+			let boolAux = true;
+			if (this.coords.length === 0) {
+				while (boolAux && i < 9) {
+					let auxX = this.x - 1 + rand(2);
+					let auxY = this.y - 1 + rand(2);
+					if (auxX < WORLD_WIDTH && auxX > -1 && auxY < WORLD_HEIGHT && auxY > -1 && control.world[auxX][auxY] instanceof Empty) {
+						boolAux = false;
+						this.coords.push(new ShrubChild(auxX, auxY, IMAGE_NAME_SHRUB));
+					}
+					i++;
+				}
+			}
+			else {
+				while (boolAux) {
+					let chosenOne = this.coords[rand(this.coords.length)];
+					while (boolAux && i < 9) {
+						let auxX = chosenOne.x - 1 + rand(2);
+						let auxY = chosenOne.y - 1 + rand(2);
+						if (auxX < WORLD_WIDTH && auxX > -1 && auxY < WORLD_HEIGHT && auxY > -1 && control.world[auxX][auxY] instanceof Empty) {
+							boolAux = false;
+							this.coords.push(new ShrubChild(auxX, auxY, IMAGE_NAME_SHRUB));
+							break;
+						}
+						i++;
+					}
+					i = 0;
+				}
+			}
+			this.time = (20 + rand(80)) * ANIMATION_EVENTS_PER_SECOND;
+		}
+	}
+}
+
+class ShrubChild extends Actor {
 	constructor(x, y, color) {
 		super(x, y, IMAGE_NAME_SHRUB);
 	}
@@ -135,9 +181,9 @@ class Berry extends Actor {
 	drawCircle(x, y, color) {
 		control.ctx.beginPath();
 		control.ctx.arc(
-			x * ACTOR_PIXELS_X + ACTOR_PIXELS_X / 2,
+			x * ACTOR_PIXELS_X + ACTOR_PIXELS_X / 2 - 1 / 2,
 			y * ACTOR_PIXELS_Y + ACTOR_PIXELS_Y / 2,
-			4,
+			3,
 			0,
 			2 * Math.PI
 		);
@@ -153,7 +199,7 @@ class Snake extends Actor {
 		this.size = 5;
 		this.body = new Array(this.size - 1);
 		for (let i = 1; i <= this.size - 1; i++) {
-			this.body[i - 1] = new SnakeBody(x - i, y);
+			this.body[i - 1] = new SnakeBody(x - i, y, IMAGE_NAME_SNAKE_BODY);
 		}
 		this.lastColors = new Array(3);
 	}
@@ -193,7 +239,9 @@ class Snake extends Actor {
 					element.hide();
 				}
 				control.clearALL();
+				this.size = 5;
 				mesg("Game Over - shrub");
+				pause = false;
 				this.hide();
 				onLoad();
 				return;
@@ -201,9 +249,12 @@ class Snake extends Actor {
 			else if (element instanceof Berry) {
 				let boolAux = true;
 				for (let i = 0; i < this.lastColors.length; i++) {
-					if (this.lastColors === element.color) {
-						this.size = div(size, 2);
+					if (this.lastColors[i] === element.imageName) {
+						this.size = div(this.size, 2);
+						if (this.size < 5)
+							this.size = 5;
 						boolAux = false;
+						break;
 					}
 				}
 				if (element.almostDying && boolAux) {
@@ -212,10 +263,13 @@ class Snake extends Actor {
 				else if (boolAux) {
 					this.size++;
 				}
+
 				for (let i = 2; i > 0; i--) {
 					this.lastColors[i] = this.lastColors[i - 1];
 				}
-				this.lastColors[0] = element.color;
+				this.lastColors[0] = element.imageName;
+
+				this.changeBody(element);
 			}
 		}
 
@@ -234,11 +288,14 @@ class Snake extends Actor {
 					element.hide();
 				}
 				control.clearALL();
+				this.size = 5;
 				mesg("Game Over - tempo");
+				pause = false;
 				onLoad();
 				return;
 			}
 		}
+
 		for (const element of this.body) {
 			let currentSegment = element;
 			if (currentSegment === undefined) {
@@ -250,12 +307,22 @@ class Snake extends Actor {
 			auxX = oldx;
 			auxY = oldy;
 		}
+
 	}
+
+	changeBody(element) {
+		for (let i = 2; i > 0; i--) {
+			this.body[i].imageName = this.body[i - 1].imageName;
+		}
+
+		this.body[0].imageName = element.imageName;
+	}
+
 }
 
 class SnakeBody extends Actor {
-	constructor(x, y) {
-		super(x, y, IMAGE_NAME_SNAKE_BODY);
+	constructor(x, y, imageName) {
+		super(x, y, imageName);
 	}
 	changePosition(x, y) {
 		this.hide();
@@ -279,6 +346,7 @@ class GameControl {
 		this.loadLevel(1);
 		this.setupEvents();
 		this.timeToAdd = rand(10 * ANIMATION_EVENTS_PER_SECOND) + 1 * ANIMATION_EVENTS_PER_SECOND;
+		this.score = 0;
 	}
 	getEmpty() {
 		return this.empty;
@@ -338,20 +406,28 @@ class GameControl {
 		);
 	}
 	animationEvent() {
-		this.time++;
-		for (let x = 0; x < WORLD_WIDTH; x++) {
-			for (let y = 0; y < WORLD_HEIGHT; y++) {
-				let a = this.world[x][y];
-				if (a.atime < this.time) {
-					a.atime = this.time;
-					a.animation(x, y);
+		if (pause) {
+			this.time++;
+			for (let x = 0; x < WORLD_WIDTH; x++) {
+				for (let y = 0; y < WORLD_HEIGHT; y++) {
+					let a = this.world[x][y];
+					if (a.atime < this.time) {
+						a.atime = this.time;
+						a.animation(x, y);
+						if (a instanceof Snake) {
+							this.score = a.size;
+							scorebox.innerHTML = "Score: " + this.score;
+						}
+					}
 				}
 			}
-		}
 
-		this.timeToAdd--;
-		if (this.timeToAdd === 0) {
-			this.addBeries();
+			this.timeToAdd--;
+			if (this.timeToAdd === 0) {
+				this.addBeries();
+				this.timeToAdd = rand(10 * ANIMATION_EVENTS_PER_SECOND) +
+					1 * ANIMATION_EVENTS_PER_SECOND;
+			}
 		}
 
 	}
@@ -365,8 +441,6 @@ class GameControl {
 				nBerriesToAdd--;
 			}
 		}
-		this.timeToAdd = rand(10 * ANIMATION_EVENTS_PER_SECOND) +
-			1 * ANIMATION_EVENTS_PER_SECOND;
 	}
 	keyDownEvent(e) {
 		this.key = e.keyCode;
@@ -389,8 +463,8 @@ function onLoad() {
 }
 
 function b1() {
-	mesg("button1");
+	pause = false;
 }
 function b2() {
-	mesg("button2");
+	pause = true;
 }
