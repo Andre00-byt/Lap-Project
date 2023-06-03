@@ -200,8 +200,8 @@ class Snake extends Actor {
 			}
 			else if (element instanceof Berry) {
 				let boolAux = true;
-				for (let i = 0; i < lastColor.length; i++) {
-					if (lastColor === element.color) {
+				for (let i = 0; i < this.lastColors.length; i++) {
+					if (this.lastColors === element.color) {
 						this.size = div(size, 2);
 						boolAux = false;
 					}
